@@ -1,0 +1,97 @@
+de visualização gráfica importar Dígrafo
+importar aleatório
+
+aula Nó AVL:
+    def __iniciar__(auto,vale):
+        auto.vale,auto.esquerda,auto.certo,auto.h = vale,Nenhum,Nenhum,1
+
+aula Árvore AVLT:
+    def __iniciar__(auto):
+        auto.raiz = Nenhum
+
+    def inserir(auto,vale):
+        def _ins(n,você):
+            se não n:
+                retornar Nó AVL(você)
+            se você < n.vale:
+                n.esquerda = _ins(n.esquerda,você)
+            elif você > n.vale:
+                n.certo = _ins(n.certo,você)
+            outro:
+                retornar n
+            n.h = 1 + máx.(auto._h(n.esquerda),auto._h(n.certo))
+            b = auto._bal(n)
+            se b > 1 e você < n.esquerda.vale:
+                retornar auto._rot_r(n)
+            se b < -1 e você > n.certo.vale:
+                retornar auto._rot_l(n)
+            se b > 1 e você > n.esquerda.vale:
+                n.esquerda = auto._rot_l(n.esquerda)
+                retornar auto._rot_r(n)
+            se b < -1 e você < n.certo.vale:
+                n.certo = auto._rot_r(n.certo)
+                retornar auto._rot_l(n)
+            retornar n
+        auto.raiz = _ins(auto.raiz,vale)
+
+    def _h(auto,n):retornar 0 se não n outro n.h
+    def _bal(auto,n):retornar 0 se não n outro auto._h(n.esquerda)- auto._h(n.certo)
+
+    def _rot_l(auto,por):
+        e,t2 = por.certo,por.certo.esquerda
+        e.esquerda,por.certo = por,t2
+        por.h = 1 + máx.(auto._h(por.esquerda),auto._h(por.certo))
+        e.h = 1 + máx.(auto._h(e.esquerda),auto._h(e.certo))
+        retornar e
+
+    def _rot_r(auto,por):
+        e,t3 = por.esquerda,por.esquerda.certo
+        e.certo,por.esquerda = por,t3
+        por.h = 1 + máx.(auto._h(por.esquerda),auto._h(por.certo))
+        e.h = 1 + máx.(auto._h(e.esquerda),auto._h(e.certo))
+        retornar e
+
+    def visualizar(auto):
+        ponto = Dígrafo()
+        def _bordas(n):
+            se n:
+                ponto.nó(str(n.vale),f"{n.vale}\n(h={n.h})")
+                se n.esquerda:
+                    ponto.borda(str(n.vale),str(n.esquerda.vale))
+                    _bordas(n.esquerda)
+                se n.certo:
+                    ponto.borda(str(n.vale),str(n.certo.vale))
+                    _bordas(n.certo)
+        _bordas(auto.raiz)
+        retornar ponto
+
+    def em ordem(auto):
+        def _em(n):retornar[]se não n outro _em(n.esquerda)+[n.vale]+ _em(n.certo)
+        retornar _em(auto.raiz)
+
+    def altura(auto):
+        retornar auto._h(auto.raiz)- 1
+
+imprimir("Rotações Simples:")
+avl1 = Árvore AVLT()
+para você em[10,20,30]:
+    avl1.inserir(você)
+    avl1.visualizar().render(f'avl_simple_{você}',formatar='png',visualizar=Verdadeiro)
+    imprimir(f"Inserido{você}: Em ordem ->",avl1.em ordem())
+
+imprimir("\nRotação Dupla:")
+avl2 = Árvore AVLT()
+para você em[10,30,20]:
+    avl2.inserir(você)
+    avl2.visualizar().render(f'avl_double_{você}',formatar='png',visualizar=Verdadeiro)
+    imprimir(f"Inserido{você}: Em ordem ->",avl2.em ordem())
+
+imprimir("\nAVL Randômica:")
+avl_r = Árvore AVLT()
+vals = aleatório.amostra(faixa(1,101),20)
+para você em vals:
+    avl_r.inserir(você)
+avl_r.visualizar().render('avl_random',formatar='png',visualizar=Verdadeiro)
+imprimir("Valores:",vals)
+imprimir("Em ordem:",avl_r.em ordem())
+imprimir("Altura:",avl_r.altura())
