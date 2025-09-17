@@ -1,0 +1,228 @@
+class No:
+    """
+    Nó de uma Árvore AVL.
+    Armazena a chave, referências para os filhos e sua altura.
+    """
+    def __init__(self, chave):
+        self.chave = chave
+        self.esquerda = None
+        self.direita = None
+        self.altura = 1  # Todo nó novo (folha) inicia com altura 1
+
+
+class ArvoreAVL:
+    """
+    Implementação de uma Árvore AVL com inserção, deleção e buscas.
+    """
+
+    def __init__(self):
+        self.raiz = None
+
+    # ===============================================================
+    # MÉTODOS AUXILIARES
+    # ===============================================================
+
+    def altura(self, no):
+        """Retorna a altura de um nó ou 0 se for None."""
+        return no.altura if no else 0
+
+    def fator_balanceamento(self, no):
+        """Calcula o fator de balanceamento de um nó."""
+        if not no:
+            return 0
+        return self.altura(no.esquerda) - self.altura(no.direita)
+
+    def atualizar_altura(self, no):
+        """Recalcula a altura de um nó com base nos filhos."""
+        no.altura = 1 + max(self.altura(no.esquerda), self.altura(no.direita))
+
+    def minimo(self, no):
+        """Retorna o nó com o menor valor da subárvore."""
+        while no and no.esquerda:
+            no = no.esquerda
+        return no
+
+    # ===============================================================
+    # ROTAÇÕES
+    # ===============================================================
+
+    def rotacao_direita(self, pivo):
+        novo_pivo = pivo.esquerda
+        temp = novo_pivo.direita
+
+        novo_pivo.direita = pivo
+        pivo.esquerda = temp
+
+        self.atualizar_altura(pivo)
+        self.atualizar_altura(novo_pivo)
+
+        return novo_pivo
+
+    def rotacao_esquerda(self, pivo):
+        novo_pivo = pivo.direita
+        temp = novo_pivo.esquerda
+
+        novo_pivo.esquerda = pivo
+        pivo.direita = temp
+
+        self.atualizar_altura(pivo)
+        self.atualizar_altura(novo_pivo)
+
+        return novo_pivo
+
+    # ===============================================================
+    # INSERÇÃO
+    # ===============================================================
+
+    def inserir(self, chave):
+        self.raiz = self._inserir(self.raiz, chave)
+
+    def _inserir(self, no, chave):
+        if not no:
+            return No(chave)
+
+        if chave < no.chave:
+            no.esquerda = self._inserir(no.esquerda, chave)
+        elif chave > no.chave:
+            no.direita = self._inserir(no.direita, chave)
+        else:
+            raise ValueError("Chave duplicada não permitida.")
+
+        self.atualizar_altura(no)
+        return self._balancear(no, chave)
+
+    # ===============================================================
+    # DELEÇÃO
+    # ===============================================================
+
+    def deletar(self, chave):
+        self.raiz = self._deletar(self.raiz, chave)
+
+    def _deletar(self, no, chave):
+        if not no:
+            return no
+
+        if chave < no.chave:
+            no.esquerda = self._deletar(no.esquerda, chave)
+        elif chave > no.chave:
+            no.direita = self._deletar(no.direita, chave)
+        else:
+            if not no.esquerda:
+                return no.direita
+            elif not no.direita:
+                return no.esquerda
+
+            substituto = self.minimo(no.direita)
+            no.chave = substituto.chave
+            no.direita = self._deletar(no.direita, substituto.chave)
+
+        self.atualizar_altura(no)
+        return self._rebalancear_apos_delecao(no)
+
+    # ===============================================================
+    # BALANCEAMENTO
+    # ===============================================================
+
+    def _balancear(self, no, chave):
+        balanceamento = self.fator_balanceamento(no)
+
+        # Caso Esquerda-Esquerda
+        if balanceamento > 1 and chave < no.esquerda.chave:
+            return self.rotacao_direita(no)
+
+        # Caso Direita-Direita
+        if balanceamento < -1 and chave > no.direita.chave:
+            return self.rotacao_esquerda(no)
+
+        # Caso Esquerda-Direita
+        if balanceamento > 1 and chave > no.esquerda.chave:
+            no.esquerda = self.rotacao_esquerda(no.esquerda)
+            return self.rotacao_direita(no)
+
+        # Caso Direita-Esquerda
+        if balanceamento < -1 and chave < no.direita.chave:
+            no.direita = self.rotacao_direita(no.direita)
+            return self.rotacao_esquerda(no)
+
+        return no
+
+    def _rebalancear_apos_delecao(self, no):
+        balanceamento = self.fator_balanceamento(no)
+
+        # Caso Esquerda-Esquerda
+        if balanceamento > 1 and self.fator_balanceamento(no.esquerda) >= 0:
+            return self.rotacao_direita(no)
+
+        # Caso Esquerda-Direita
+        if balanceamento > 1 and self.fator_balanceamento(no.esquerda) < 0:
+            no.esquerda = self.rotacao_esquerda(no.esquerda)
+            return self.rotacao_direita(no)
+
+        # Caso Direita-Direita
+        if balanceamento < -1 and self.fator_balanceamento(no.direita) <= 0:
+            return self.rotacao_esquerda(no)
+
+        # Caso Direita-Esquerda
+        if balanceamento < -1 and self.fator_balanceamento(no.direita) > 0:
+            no.direita = self.rotacao_direita(no.direita)
+            return self.rotacao_esquerda(no)
+
+        return no
+
+    # ===============================================================
+    # BUSCAS
+    # ===============================================================
+
+    def buscar_intervalo(self, chave1, chave2):
+        """Retorna os valores entre chave1 e chave2 (inclusive)."""
+        resultado = []
+        self._buscar_intervalo(self.raiz, chave1, chave2, resultado)
+        return resultado
+
+    def _buscar_intervalo(self, no, chave1, chave2, resultado):
+        if not no:
+            return
+        if chave1 < no.chave:
+            self._buscar_intervalo(no.esquerda, chave1, chave2, resultado)
+        if chave1 <= no.chave <= chave2:
+            resultado.append(no.chave)
+        if chave2 > no.chave:
+            self._buscar_intervalo(no.direita, chave1, chave2, resultado)
+
+    def profundidade(self, chave):
+        """Retorna a profundidade de um nó ou -1 se não existir."""
+        return self._profundidade(self.raiz, chave, 0)
+
+    def _profundidade(self, no, chave, nivel):
+        if not no:
+            return -1
+        if chave == no.chave:
+            return nivel
+        elif chave < no.chave:
+            return self._profundidade(no.esquerda, chave, nivel + 1)
+        else:
+            return self._profundidade(no.direita, chave, nivel + 1)
+
+
+# ===============================================================
+# TESTE
+# ===============================================================
+if __name__ == "__main__":
+    arvore = ArvoreAVL()
+    print("\n--- TESTE: Árvore AVL ---")
+
+    print("\n1) Inserindo nós...")
+    for chave in [9, 5, 10, 0, 6, 11, -1, 1, 2]:
+        arvore.inserir(chave)
+    print("Inserção concluída.")
+
+    print("\n2) Deletando nós...")
+    for chave in [10, 11]:
+        arvore.deletar(chave)
+    print("Deleção concluída.")
+
+    print("\n3) Buscando intervalo [1, 9]...")
+    print(f"Nós encontrados: {sorted(arvore.buscar_intervalo(1, 9))}")
+
+    print("\n4) Profundidade do nó 6...")
+    print(f"Profundidade: {arvore.profundidade(6)}")
